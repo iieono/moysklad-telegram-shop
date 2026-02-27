@@ -1,0 +1,33 @@
+{
+  "name": "tx-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop tx-backend",
+    "pm2:restart": "pm2 restart tx-backend",
+    "pm2:logs": "pm2 logs tx-backend",
+    "pm2:monit": "pm2 monit",
+    "prisma": "prisma",
+    "migrate": "prisma db push"
+  },
+  "dependencies": {
+    "@fastify/compress": "^7.0.0",
+    "@fastify/cors": "^8.5.0",
+    "@fastify/rate-limit": "^9.0.0",
+    "@prisma/client": "^5.19.1",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "pdfmake": "^0.3.4",
+    "prisma": "^5.19.1",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "tsx": "^4.16.5",
+    "typescript": "^5.5.4"
+  }
+}

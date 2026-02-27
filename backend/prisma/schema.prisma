@@ -1,0 +1,90 @@
+// Prisma schema for initial setup.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  telegramId            String   @unique
+  phoneNumber           String?  @unique
+  username              String?
+  firstName             String?
+  lastName              String?
+  language              String   @default("uz")
+  moskladCounterpartyId String?
+  defaultAddress        String?
+  pendingState          String?
+  lastOrderAt           DateTime?
+  lastDebtReminderAt    DateTime?
+  draftOrder            DraftOrder?
+  reminders             Reminder[]
+  adminSettings         AdminSettings?
+  likedProducts         LikedProduct[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model LikedProduct {
+  id        Int    @id @default(autoincrement())
+  userId    String
+  productId String
+  user      User   @relation(fields: [userId], references: [id])
+  @@unique([userId, productId])
+}
+
+model AdminSettings {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  notifyNewUser       Boolean @default(false)
+  notifyNewOrder      Boolean @default(false)
+  notifyOrderStatus   Boolean @default(false)
+  notifyOrderUpdate   Boolean @default(false)
+  notifyPayment       Boolean @default(false)
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  userId    String
+  dueAt     DateTime
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dueAt])
+}
+
+model DraftOrder {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  deliveryMethod String?
+  orderNote      String?
+  addressText    String?
+  locationLat    Float?
+  locationLng    Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  items          DraftOrderItem[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DraftOrderItem {
+  id           String  @id @default(cuid())
+  draftOrderId String
+  productId    String
+  name         String
+  price        Int
+  quantity     Int
+
+  draftOrder DraftOrder @relation(fields: [draftOrderId], references: [id], onDelete: Cascade)
+
+  @@index([draftOrderId])
+}

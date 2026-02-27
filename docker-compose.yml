@@ -1,0 +1,104 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tx-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: tx_electronics
+      POSTGRES_USER: tx
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tx_password}
+    volumes:
+      - tx_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tx -d tx_electronics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: "0.75"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tx-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://tx:${DB_PASSWORD:-tx_password}@postgres:5432/tx_electronics?schema=public&connection_limit=10&connect_timeout=10&pool_timeout=10
+      PORT: 4000
+      BOT_TOKEN: ${BOT_TOKEN}
+      WEBAPP_URL: ${WEBAPP_URL:-http://localhost:5173}
+      MOSKLAD_TOKEN: ${MOSKLAD_TOKEN}
+      MOSKLAD_BASE_URL: ${MOSKLAD_BASE_URL:-https://api.moysklad.ru/api/remap/1.2}
+      REMINDER_DAYS_AFTER_ORDER: ${REMINDER_DAYS_AFTER_ORDER:-1,2,3,6}
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS}
+      MOSKLAD_DRIVER_MODEL_ATTRS: ${MOSKLAD_DRIVER_MODEL_ATTRS}
+      MOSKLAD_DRIVER_NUMBER_ATTRS: ${MOSKLAD_DRIVER_NUMBER_ATTRS}
+      MOSKLAD_COUNTERPARTY_USERNAME_ATTR: ${MOSKLAD_COUNTERPARTY_USERNAME_ATTR}
+      MOSKLAD_COUNTERPARTY_TELEGRAM_ID_ATTR: ${MOSKLAD_COUNTERPARTY_TELEGRAM_ID_ATTR}
+      MOSKLAD_COUNTERPARTY_LOCATION_ATTR: ${MOSKLAD_COUNTERPARTY_LOCATION_ATTR}
+      MOSKLAD_COUNTERPARTY_ADDRESS_ATTR: ${MOSKLAD_COUNTERPARTY_ADDRESS_ATTR}
+      MOSKLAD_ORDER_LOCATION_ATTR: ${MOSKLAD_ORDER_LOCATION_ATTR}
+      MOSKLAD_ORDER_ADDRESS_ATTR: ${MOSKLAD_ORDER_ADDRESS_ATTR}
+      MOSKLAD_ORDER_NOTE_ATTR: ${MOSKLAD_ORDER_NOTE_ATTR}
+      MOSKLAD_DELIVERY_METHOD_ATTR: ${MOSKLAD_DELIVERY_METHOD_ATTR}
+      MOSKLAD_DELIVERY_METHOD_PICKUP: ${MOSKLAD_DELIVERY_METHOD_PICKUP}
+      MOSKLAD_DELIVERY_METHOD_DELIVERY: ${MOSKLAD_DELIVERY_METHOD_DELIVERY}
+      REPORT_HOUR: ${REPORT_HOUR:-20}
+      REPORT_TIMEZONE_OFFSET: ${REPORT_TIMEZONE_OFFSET:-5}
+      TEST_MODE: ${TEST_MODE:-false}
+      TEST_TELEGRAM_ID: ${TEST_TELEGRAM_ID:-}
+      ORDER_ADDRESS_DETAILS: ${ORDER_ADDRESS_DETAILS}
+      COUNTERPARTY_ADDRESS_DETAILS: ${COUNTERPARTY_ADDRESS_DETAILS}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_YANDEX_MAPS_API_KEY: ${VITE_YANDEX_MAPS_API_KEY}
+    container_name: tx-webapp
+    restart: always
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+
+volumes:
+  tx_postgres_data:
+    driver: local
