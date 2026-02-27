@@ -2,21 +2,6 @@
 
 A Telegram Mini App + bot for product browsing and order management, backed by MoySklad ERP for real-time inventory, pricing, and order sync. Three-language support (Uzbek Latin, Uzbek Cyrillic, Russian), PDF invoice generation, GPS-based delivery, and per-admin configurable notifications.
 
----
-
-## Screenshots
-
-> Screenshots coming soon — drop images into `/screenshots` and update paths below.
-
-| Browse | Cart | Order |
-|--------|------|-------|
-| ![browse](screenshots/browse.png) | ![cart](screenshots/cart.png) | ![order](screenshots/order.png) |
-
-| Bot registration | Order notification | PDF invoice |
-|------------------|--------------------|-------------|
-| ![reg](screenshots/bot-register.png) | ![notif](screenshots/bot-order.png) | ![pdf](screenshots/pdf.png) |
-
----
 
 ## Features
 
